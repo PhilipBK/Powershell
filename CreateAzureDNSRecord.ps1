@@ -4,7 +4,8 @@ Function New-AzureDNSRecord {
     A simple function to manage Azure DNS with Powershell using the Az Powershell module.
 
 .DESCRIPTION
-    In order to use this script remember to specify the TenantId and the SubscriptionName, else the script wont load into your Azure tenant.
+    In order to use this script remember to specify the TenantId and the SubscriptionName, else the script wont load into your Azure tenant. 
+    This function requires you to have created the DNS Zone and ressource group in advance, and 
 
 .PARAMETER RecordType
     RecordType is required for letting this function know what record to create in Azure. Use Tab-completion to switch between the different RecordTypes.
@@ -23,6 +24,12 @@ param(
 [string]$Name
     )
 
+# Declared Ressource group name, DNS Zone name and default TTL
+
+$RGName = Get-AzDnsZone | Select-Object RessourceGroupName
+$ZoneName = Get-AzDnsZone | Select-Object Name
+$TTL = "360"
+ 
 # Module installed check
 
 if (Get-Module -ListAvailable -Name Az) {
@@ -34,7 +41,7 @@ else {
 
 # Connect to Azure tenant and create records
 
-Connect-AzAccount -TenantId "f70bffb3-d8e9-4525-b88d-4b8e14d142e1" -SubscriptionName "Betalt efter forbrug"
+Connect-AzAccount -TenantId "1465daca-8f16-4a61-aaae-0ac42c0d2a54" -SubscriptionName "Betalt efter forbrug"
 
 if($RecordType -eq "A") { 
 
@@ -47,7 +54,7 @@ if($RecordType -eq "CNAME") {
 
     $CNAME = Read-Host "Specify the name for the destination of the CNAME"
     
-    New-AzDnsRecordSet -Name $Name -RecordType $RecordType -ZoneName $ZoneName -ResourceGroupName $RGName -Ttl 360 -DnsRecords (New-AzDnsRecordConfig -Cname $CNAME)
+    New-AzDnsRecordSet -Name $Name -RecordType $RecordType -ZoneName $ZoneName -ResourceGroupName $RGName -Ttl $TTL -DnsRecords (New-AzDnsRecordConfig -Cname $CNAME)
 }
 
 if($RecordType -eq "SRV") {
