@@ -21,14 +21,17 @@ param(
 [string]$RecordType,
 
 [Parameter(Mandatory=$true)]
-[string]$Name
+[string]$Name,
+[string]$RecordData
     )
 
-# Declared Ressource group name, DNS Zone name and default TTL
+# Declared variables for the script
 
-$RGName = Get-AzDnsZone | Select-Object RessourceGroupName
-$ZoneName = Get-AzDnsZone | Select-Object Name
-$TTL = "360"
+$SubscriptionName = "Betalt efter forbrug"
+$TenantId = "1465daca-8f16-4a61-aaae-0ac42c0d2a54"
+$RGName = "DNS-RG"
+$ZoneName = "baslund.me"
+$Ttl = "360"
  
 # Module installed check
 
@@ -36,34 +39,28 @@ if (Get-Module -ListAvailable -Name Az) {
         Write-Host "Az Powershell Module exists. Proceeding..."
 } 
 else {
-    Install-Module -Name Az -AllowClobber
+        Install-Module Az -AllowClobber
      }
 
 # Connect to Azure tenant and create records
 
-Connect-AzAccount -TenantId "1465daca-8f16-4a61-aaae-0ac42c0d2a54" -SubscriptionName "Betalt efter forbrug"
-
-if($RecordType -eq "A") { 
-
-    $IP = Read-Host "Specify the IP for the A record" 
-           
-    New-AzDnsRecordSet -Name $Name -RecordType $RecordType -ZoneName $ZoneName -ResourceGroupName $RGName -Ttl $TTL -DnsRecords (New-AzDnsRecordConfig -IPv4Address $IP)
-}
-
-if($RecordType -eq "CNAME") {
-
-    $CNAME = Read-Host "Specify the name for the destination of the CNAME"
-    
-    New-AzDnsRecordSet -Name $Name -RecordType $RecordType -ZoneName $ZoneName -ResourceGroupName $RGName -Ttl $TTL -DnsRecords (New-AzDnsRecordConfig -Cname $CNAME)
-}
-
-if($RecordType -eq "SRV") {
-
-    $Weight = Read-Host "Specify the weight for the SRV record"
-    $Prio = Read-Host "Specify the priority for the SRV record"    
-    $TCPPort = Read-Host "Specify the TCP port for the SRV record"
-    $Target = Read-Host "Specify the target for the SRV record"
-     
-    New-AzDnsRecordSet -Name $Name -RecordType $RecordType -ZoneName $ZoneName -ResourceGroupName $RGName -Ttl $TTL -DnsRecords (New-AzDnsRecordConfig -Priority $Prio -Weight $Weight -Port $TCPPort -Target $Target)
+Connect-AzAccount -TenantId $TenantId -SubscriptionName $SubscriptionName
+    switch ($RecordType) {
+        A 
+            {
+                New-AzDnsRecordSet -Name $Name -ZoneName $ZoneName -ResourceGroupName $RGName -Ttl $Ttl -DnsRecords (New-AzDnsRecordConfig -IPv4Address $RecordData)}
+        CNAME 
+            {
+                New-AzDnsRecordSet -Name $Name -ZoneName $ZoneName -ResourceGroupName $RGName -Ttl $Ttl -DnsRecords (New-AzDnsRecordConfig -Cname $RecordData)}
     }
+
 }
+
+#if($RecordType -eq "A") { 
+#$IP = Read-Host "Specify the IP for the A record" 
+# New-AzDnsRecordSet -Name $Name -ZoneName $ZoneName -ResourceGroupName $RGName -Ttl $Ttl -DnsRecords (New-AzDnsRecordConfig -IPv4Address $IP)
+
+
+#if($RecordType -eq "CNAME") {
+#$CNAME = Read-Host "Specify the name for the destination of the CNAME"
+#New-AzDnsRecordSet -Name $Name -ZoneName $ZoneName -ResourceGroupName $RGName -Ttl $Ttl -DnsRecords (New-AzDnsRecordConfig -Cname $CNAME)
